@@ -1,0 +1,141 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+#define F first
+#define S second
+#define pb push_back
+#define set_bits __builtin_popcountll
+#define prDouble(x) cout << fixed << setprecision(10) << x
+#define all(x) (x).begin(), (x).end()
+#define rall(x) (x).rbegin(), (x).rend()
+#define sz(x) ((ll)(x).size())
+#define fast_io() ios_base::sync_with_stdio(false); cin.tie(NULL);
+
+using ll = long long;
+using ull = unsigned long long;
+using ld = long double;
+
+constexpr ll INF = 2e18;
+constexpr ld EPS = 1e-9;
+constexpr ll MOD = 1000000007;
+constexpr ll MOD2 = 998244353;
+
+typedef vector<ll> vll;
+typedef vector<vll> vvll;
+typedef pair<ll, ll> pll;
+typedef vector<pll> vpll;
+
+void _print(ll t) {cerr << t;}
+void _print(int t) {cerr << t;}
+void _print(string t) {cerr << t;}
+void _print(char t) {cerr << t;}
+void _print(ld t) {cerr << t;}
+void _print(double t) {cerr << t;}
+void _print(ull t) {cerr << t;}
+
+template <class T, class V> void _print(pair<T, V> p);
+template <class T> void _print(vector<T> v);
+template <class T> void _print(set<T> v);
+template <class T, class V> void _print(map<T, V> v);
+template <class T> void _print(multiset<T> v);
+template <class T, class V> void _print(pair<T, V> p) {cerr << "{"; _print(p.F); cerr << ","; _print(p.S); cerr << "}";}
+template <class T> void _print(vector<T> v) {cerr << "[ "; for (T i : v) {_print(i); cerr << " ";} cerr << "]";}
+template <class T> void _print(set<T> v) {cerr << "[ "; for (T i : v) {_print(i); cerr << " ";} cerr << "]";}
+template <class T> void _print(multiset<T> v) {cerr << "[ "; for (T i : v) {_print(i); cerr << " ";} cerr << "]";}
+template <class T, class V> void _print(map<T, V> v) {cerr << "[ "; for (auto i : v) {_print(i); cerr << " ";} cerr << "]";}
+
+ll binExpIter(ll a, ll b) { ll temp = 1; while (b > 0) { if (b & 1) temp = (temp * 1LL * a) % MOD2; a = (a * 1LL * a) % MOD2; b >>= 1; } return temp % MOD2; }
+ll inv(ll n) { return binExpIter(n, MOD - 2) % MOD; }
+ull __lcm(ull a, ull b) { return (a * b) / __gcd(a, b); }
+ll mod_mul(ll a, ll b) { return ((a % MOD) * (b % MOD)) % MOD; }
+ll mod_add(ll a, ll b) { return ((a % MOD) + (b % MOD)) % MOD; }
+ll mod_sub(ll a, ll b) { return ((a % MOD) - (b % MOD) + MOD) % MOD; }
+ll mod_div(ll a, ll b) { return mod_mul(a, inv(b)); }
+
+class SegmentTree {
+public:
+    int n;
+    vector<long long> tree;
+
+    SegmentTree(int _n) {
+        n = _n;
+        tree.assign(4 * n, 0);
+    }
+
+    SegmentTree(const vector<long long> &arr) {
+        n = arr.size();
+        tree.assign(4 * n, 0);
+        build(1, 0, n - 1, arr);
+    }
+
+    void build(int node, int l, int r, const vector<long long> &arr) {
+        if (l == r) {
+            tree[node] = arr[l];
+            return;
+        }
+        int mid = (l + r) / 2;
+        build(node * 2, l, mid, arr);
+        build(node * 2 + 1, mid + 1, r, arr);
+        tree[node] = tree[node * 2] + tree[node * 2 + 1];
+    }
+
+    void update(int idx, long long val) {
+        update(1, 0, n - 1, idx, val);
+    }
+
+    void update(int node, int l, int r, int idx, long long val) {
+        if (l == r) {
+            tree[node] += val;
+            tree[node] %= MOD;
+            return;
+        }
+        int mid = (l + r) / 2;
+        if (idx <= mid) update(node * 2, l, mid, idx, val);
+        else update(node * 2 + 1, mid + 1, r, idx, val);
+        tree[node] = tree[node * 2] + tree[node * 2 + 1];
+    }
+
+    long long query(int ql, int qr) {
+        return query(1, 0, n - 1, ql, qr);
+    }
+
+    long long query(int node, int l, int r, int ql, int qr) {
+        if (qr < l || r < ql) return 0; // no overlap
+        if (ql <= l && r <= qr) return tree[node]; // total overlap
+        int mid = (l + r) / 2;
+        return query(node * 2, l, mid, ql, qr) +
+               query(node * 2 + 1, mid + 1, r, ql, qr);
+    }
+};
+
+void solve() {
+    ll i=0,j=0,n,m;
+    cin>>n;
+    vll a(n);
+    for(i=0;i<n;i++) cin>>a[i];
+    vll dp(n,0);
+    vll b=a;
+    sort(all(b));
+    b.erase(unique(all(b)), b.end());
+    SegmentTree sg(sz(b));
+    ll ans=0;
+    for(i=0;i<n;i++) {
+        ll idx = lower_bound(all(b), a[i])-b.begin();
+        ll sum=(idx>0) ? sg.query(0,idx-1) : 0;
+        ll val=(sum+1)%MOD;
+        sg.update(idx,val);
+        ans=(ans+val)%MOD;
+    }
+    cout<<ans<<endl;
+    return;
+
+}
+
+int32_t main() {
+    fast_io();
+    int t = 1;
+    // cin >> t;
+    while (t--) solve();
+    cerr << "time taken : " << (float)clock() / CLOCKS_PER_SEC << " secs\n";
+    return 0;
+}
